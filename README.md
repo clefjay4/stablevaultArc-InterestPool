@@ -29,7 +29,10 @@
 3. Stake any amount
 4. Check rewards and withdraw anytime
 
----
+* Tech Stack: Solidity, Remix, OpenZeppelin, HTML, JavaScript, and Web3.js.
+
+* Purpose: Demo project to learn DeFi fundamentals (staking & smart contracts).
+* Future plans: yield farming and dynamic reward systems
 
 **Note:** Testnet only — not for real funds.
 MIT License © 2025 StableStakerArc Developers
