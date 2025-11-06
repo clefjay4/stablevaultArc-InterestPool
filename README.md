@@ -1,38 +1,12 @@
-# 🪙 StableStakerArc
+**StableVault — USDC Interest Pool**
 
-**StableStakerArc** is a simple staking DApp on the **Arc Testnet** that lets users stake **USDC** and earn a **5% reward** instantly.
+StableVault is a simple decentralized application (DApp) built on the Arc Testnet that allows users to deposit USDC and earn a fixed 5% interest. It’s designed as a demo project to show how smart contracts can handle token deposits, interest rewards, and withdrawals securely using Solidity and Web3.js.
 
----
+Users can:
 
- Features
+* Connect or disconnect their wallet
+* Deposit (stake) USDC
+* View their total deposit and interest earned
+* Withdraw their funds at any time
 
-* Stake and withdraw USDC
-* View your staked balance + reward
-* SafeERC20 + ReentrancyGuard security
-* Owner-only emergency withdraw (for testing)
-
----
-
-## 🔗 Smart Contract
-
-* **Network:** Arc Testnet
-* **USDC Address:** `0x3600000000000000000000000000000000000000`
-* **Reward:** 5% fixed
-* **Deployed Contract:** `0xc3B2a6DD055F9c36D55A1D9267B94008d1789472`
-
----
-
-## 🧠 How to Use
-
-1. Connect MetaMask (Arc Testnet)
-2. Approve USDC for staking
-3. Stake any amount
-4. Check rewards and withdraw anytime
-
-* Tech Stack: Solidity, Remix, OpenZeppelin, HTML, JavaScript, and Web3.js.
-
-* Purpose: Demo project to learn DeFi fundamentals (staking & smart contracts).
-* Future plans: yield farming and dynamic reward systems
-
-**Note:** Testnet only — not for real funds.
-MIT License © 2025 StableStakerArc Developers
+The project uses a clean, futuristic Arc-style interface and follows secure smart contract principles. It’s built for learning and exploration, a foundation for future upgrades like real yield farming or liquidity staking.
