@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StableVault — USDC Interest Pool</title>
+
+  <!-- Arc-themed CSS -->
+  <style>
+    body {
+      background: linear-gradient(160deg, #0b1729, #0f213f);
+      color: #e6f0ff;
+      font-family: "Inter", "Poppins", sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      color: #6bb3ff;
+      text-shadow: 0 0 10px rgba(107, 179, 255, 0.4);
+      margin-top: 40px;
+      font-size: 2.2rem;
+    }
+
+    button {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      margin: 8px;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+      transform: translateY(-2px);
+    }
+
+    input {
+      background: rgba(255, 255, 255, 0.07);
+      color: #e6f0ff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin: 10px;
+      width: 220px;
+    }
+
+    input::placeholder {
+      color: rgba(230, 240, 255, 0.6);
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.2);
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    .info {
+      margin-top: 20px;
+      color: #a5b4fc;
+    }
+
+    a {
+      color: #6bb3ff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+
+  <!-- Web3.js -->
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+</head>
+
+<body>
+  <h1>StableVault — USDC Interest Pool</h1>
+
+  <div class="container">
+    <button id="connectButton">Connect Wallet</button>
+    <button id="disconnectButton" style="display:none; background:#ef4444;">Disconnect</button>
+
+    <div>
+      <input type="number" id="amount" placeholder="Amount in USDC" />
+      <button id="depositButton">Deposit USDC</button>
+    </div>
+
+    <div>
+      <button id="viewDepositButton">View My Deposit</button>
+      <button id="withdrawButton">Withdraw</button>
+    </div>
+
+    <p class="info" id="output"></p>
+  </div>
+
+  <script>
+    // Arc Testnet USDC token address
+    const usdcAddress = "0x3600000000000000000000000000000000000000";
+
+    // Your deployed contract address
+    const contractAddress = "0xc3B2a6DD055F9c36D55A1D9267B94008d1789472";
+
+    const abi = [
+      {
+        "inputs": [{"internalType": "address","name": "_usdc","type": "address"},
+                   {"internalType": "uint256","name": "_rewardPercent","type": "uint256"}],
+        "stateMutability": "nonpayable","type": "constructor"
+      },
+      {"anonymous": false,"inputs": [{"indexed": true,"internalType": "address","name": "user","type": "address"},
+      {"indexed": false,"internalType": "uint256","name": "amount","type": "uint256"}],
+      "name": "Staked","type": "event"},
+      {"inputs": [],"name": "emergencyWithdrawAll","outputs": [],"stateMutability": "nonpayable","type": "function"},
+      {"inputs": [],"name": "getMyStake","outputs": [{"internalType": "uint256","name": "amount","type": "uint256"},
+      {"internalType": "uint256","name": "reward","type": "uint256"}],
+      "stateMutability": "view","type": "function"},
+      {"inputs": [],"name": "owner","outputs": [{"internalType": "address","name": "","type": "address"}],
+      "stateMutability": "view","type": "function"},
+      {"inputs": [{"internalType": "uint256","name": "_amount","type": "uint256"}],
+      "name": "stake","outputs": [],"stateMutability": "nonpayable","type": "function"},
+      {"inputs": [],"name": "withdraw","outputs": [],"stateMutability": "nonpayable","type": "function"}
+    ];
+
+    let web3;
+    let contract;
+    let accounts;
+
+    const connectButton = document.getElementById("connectButton");
+    const disconnectButton = document.getElementById("disconnectButton");
+    const depositButton = document.getElementById("depositButton");
+    const viewDepositButton = document.getElementById("viewDepositButton");
+    const withdrawButton = document.getElementById("withdrawButton");
+    const output = document.getElementById("output");
+
+    connectButton.onclick = async () => {
+      if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        accounts = await web3.eth.getAccounts();
+        contract = new web3.eth.Contract(abi, contractAddress);
+        connectButton.style.display = "none";
+        disconnectButton.style.display = "inline-block";
+        output.innerText = "Wallet connected: " + accounts[0];
+      } else {
+        alert("Please install MetaMask to connect your wallet.");
+      }
+    };
+
+    disconnectButton.onclick = () => {
+      accounts = [];
+      connectButton.style.display = "inline-block";
+      disconnectButton.style.display = "none";
+      output.innerText = "Wallet disconnected.";
+    };
+
+    depositButton.onclick = async () => {
+      const amount = document.getElementById("amount").value;
+      if (!amount) return alert("Enter an amount first");
+      try {
+        await contract.methods.stake(amount * 1e6).send({ from: accounts[0] });
+        output.innerText = "Deposit successful!";
+      } catch (err) {
+        output.innerText = "Deposit failed: " + err.message;
+      }
+    };
+
+    viewDepositButton.onclick = async () => {
+      try {
+        const result = await contract.methods.getMyStake().call({ from: accounts[0] });
+        const amount = result.amount / 1e6;
+        const reward = result.reward / 1e6;
+        output.innerText = `You deposited ${amount} USDC | Interest Earned: ${reward} USDC`;
+      } catch (err) {
+        output.innerText = "Error: " + err.message;
+      }
+    };
+
+    withdrawButton.onclick = async () => {
+      try {
+        await contract.methods.withdraw().send({ from: accounts[0] });
+        output.innerText = "Withdrawal successful!";
+      } catch (err) {
+        output.innerText = "Withdraw failed: " + err.message;
+      }
+    };
+  </script>
+</body>
+</html>
