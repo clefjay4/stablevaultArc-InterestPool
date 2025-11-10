@@ -9,4 +9,13 @@ Users can:
 * View their total deposit and interest earned
 * Withdraw their funds at any time
 
-The project uses a clean, futuristic Arc-style interface and follows secure smart contract principles. It’s built for learning and exploration, a foundation for future upgrades like real yield farming or liquidity staking.
+The project uses a clean, futuristic Arc style interface and follows secure smart contract principles. It’s built for learning and exploration, a foundation for future upgrades like real yield farming or liquidity staking.
+
+
+
+
+
+
+## Verified Contract
+- Address: 0xc3B2a6DD055F9c36D55A1D9267B94008d1789472
+- Verified on: [ArcScan Testnet](https://testnet.arcscan.app/address/0xc3B2a6DD055F9c36D55A1D9267B94008d1789472)
