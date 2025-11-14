@@ -1,202 +1,325 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StableVault — USDC Interest Pool</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>StableVault — USDC Interest Pool (Arc Testnet)</title>
 
-  <!-- Arc-themed CSS -->
+  <!-- web3 -->
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+
   <style>
-    body {
-      background: linear-gradient(160deg, #0b1729, #0f213f);
-      color: #e6f0ff;
-      font-family: "Inter", "Poppins", sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
+    :root{
+      --bg1:#0b1729; --bg2:#0f213f; --accent:#6bb3ff; --muted:#a5b4fc;
+      --card: rgba(255,255,255,0.04);
     }
-
-    h1 {
-      color: #6bb3ff;
-      text-shadow: 0 0 10px rgba(107, 179, 255, 0.4);
-      margin-top: 40px;
-      font-size: 2.2rem;
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;}
+    body{
+      background:linear-gradient(160deg,var(--bg1),var(--bg2));
+      color:#e6f0ff; display:flex; justify-content:center; align-items:flex-start; padding:28px 12px;
     }
-
-    button {
-      background: linear-gradient(135deg, #1e3a8a, #2563eb);
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      margin: 8px;
-      border-radius: 10px;
-      font-size: 15px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    .app{width:100%; max-width:820px; border-radius:12px; padding:22px; box-sizing:border-box;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      box-shadow:0 10px 30px rgba(8,20,40,0.6);
     }
-
-    button:hover {
-      background: linear-gradient(135deg, #2563eb, #1e40af);
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
-      transform: translateY(-2px);
-    }
-
-    input {
-      background: rgba(255, 255, 255, 0.07);
-      color: #e6f0ff;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
-      padding: 10px 14px;
-      margin: 10px;
-      width: 220px;
-    }
-
-    input::placeholder {
-      color: rgba(230, 240, 255, 0.6);
-    }
-
-    .container {
-      background: rgba(255, 255, 255, 0.05);
-      padding: 30px;
-      border-radius: 16px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 20px rgba(37, 99, 235, 0.2);
-      margin-top: 40px;
-      text-align: center;
-    }
-
-    .info {
-      margin-top: 20px;
-      color: #a5b4fc;
-    }
-
-    a {
-      color: #6bb3ff;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
+    header{display:flex;align-items:center;gap:12px;}
+    h1{margin:0;font-size:1.2rem;color:var(--accent);text-shadow:0 0 10px rgba(107,179,255,0.12);}
+    .top-right {margin-left:auto;text-align:right}
+    .muted{color:var(--muted);font-size:13px;}
+    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:16px;}
+    .card{background:var(--card);padding:14px;border-radius:10px;}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px;}
+    input[type="number"]{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);
+      background:rgba(255,255,255,0.03);color:#e6f0ff;font-size:14px;box-sizing:border-box;}
+    button{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:white;border:0;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#e6f0ff}
+    .info{margin-top:10px;color:var(--muted);font-size:13px;white-space:pre-line;}
+    .status{margin-top:12px;padding:12px;border-radius:8px;background:rgba(0,0,0,0.2);font-size:13px;color:#e6f0ff}
+    footer{margin-top:12px;color:#9fb5ff;font-size:13px}
+    .small{font-size:12px;color:#9fb5ff}
+    .hidden{display:none}
+    @media (max-width:720px){ .grid{grid-template-columns: 1fr;}}
   </style>
-
-  <!-- Web3.js -->
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
 </head>
-
 <body>
-  <h1>StableVault — USDC Interest Pool</h1>
+  <div class="app" role="main" aria-label="StableVault App">
+    <header>
+      <h1>StableVault — Interest Pool</h1>
+      <div class="top-right">
+        <div class="muted">Network: <span id="networkName">-</span></div>
+        <div class="muted">Account: <span id="acct">-</span></div>
+      </div>
+    </header>
 
-  <div class="container">
-    <button id="connectButton">Connect Wallet</button>
-    <button id="disconnectButton" style="display:none; background:#ef4444;">Disconnect</button>
+    <div class="grid">
+      <div class="card">
+        <label for="amount">Deposit (USDC)</label>
+        <input id="amount" type="number" inputmode="decimal" placeholder="e.g. 1" step="0.000001" />
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button id="approveDepositBtn">Approve & Deposit</button>
+          <button id="maxBtn" class="secondary">Max</button>
+          <button id="connectBtn" class="secondary" style="margin-left:auto">Connect Wallet</button>
+        </div>
+        <div class="info" id="depositInfo">Enter amount in USDC. App will ask approval automatically if needed.</div>
+      </div>
 
-    <div>
-      <input type="number" id="amount" placeholder="Amount in USDC" />
-      <button id="depositButton">Deposit USDC</button>
+      <div class="card">
+        <label>Your balances</label>
+        <div class="muted">USDC balance: <strong id="usdcBalance">-</strong></div>
+        <div class="muted">Your deposit: <strong id="yourDeposit">-</strong></div>
+        <div class="muted">Interest earned: <strong id="yourReward">-</strong></div>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <button id="refreshBtn" class="secondary">Refresh</button>
+          <button id="viewBtn" class="secondary">View</button>
+          <button id="withdrawBtn" class="secondary">Withdraw</button>
+        </div>
+      </div>
     </div>
 
-    <div>
-      <button id="viewDepositButton">View My Deposit</button>
-      <button id="withdrawButton">Withdraw</button>
-    </div>
-
-    <p class="info" id="output"></p>
+    <div id="status" class="status">Status: idle</div>
+    <footer>Verified contract: <a id="contractLink" target="_blank" rel="noopener">ArcScan</a></footer>
   </div>
 
-  <script>
-    // Arc Testnet USDC token address
-    const usdcAddress = "0x3600000000000000000000000000000000000000";
+<script>
+/* ---------- CONFIG - do not change unless you know what you do ---------- */
+const USDC_ADDRESS = "0x3600000000000000000000000000000000000000".toLowerCase();
+const CONTRACT_ADDRESS = "0xc3b2a6dd055f9c36d55a1d9267b94008d1789472".toLowerCase();
+const BLOCK_EXPLORER_BASE = "https://testnet.arcscan.app";
+const POLL_INTERVAL = 10000; // 10s
+/* ---------------------------------------------------------------------- */
 
-    // Your deployed contract address
-    const contractAddress = "0xc3B2a6DD055F9c36D55A1D9267B94008d1789472";
+/* Minimal ABIs */
+const ERC20_ABI = [
+  { "constant": true, "inputs":[{"name":"_owner","type":"address"}], "name":"balanceOf", "outputs":[{"name":"","type":"uint256"}], "type":"function" },
+  { "constant": true, "inputs":[{"name":"owner","type":"address"},{"name":"spender","type":"address"}], "name":"allowance","outputs":[{"name":"","type":"uint256"}],"type":"function" },
+  { "constant": false, "inputs":[{"name":"spender","type":"address"},{"name":"value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function" },
+  { "constant": true, "inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"type":"function" }
+];
+const VAULT_ABI = [
+  {"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"stake","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[],"name":"getMyStake","outputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"reward","type":"uint256"}],"stateMutability":"view","type":"function"}
+];
 
-    const abi = [
-      {
-        "inputs": [{"internalType": "address","name": "_usdc","type": "address"},
-                   {"internalType": "uint256","name": "_rewardPercent","type": "uint256"}],
-        "stateMutability": "nonpayable","type": "constructor"
-      },
-      {"anonymous": false,"inputs": [{"indexed": true,"internalType": "address","name": "user","type": "address"},
-      {"indexed": false,"internalType": "uint256","name": "amount","type": "uint256"}],
-      "name": "Staked","type": "event"},
-      {"inputs": [],"name": "emergencyWithdrawAll","outputs": [],"stateMutability": "nonpayable","type": "function"},
-      {"inputs": [],"name": "getMyStake","outputs": [{"internalType": "uint256","name": "amount","type": "uint256"},
-      {"internalType": "uint256","name": "reward","type": "uint256"}],
-      "stateMutability": "view","type": "function"},
-      {"inputs": [],"name": "owner","outputs": [{"internalType": "address","name": "","type": "address"}],
-      "stateMutability": "view","type": "function"},
-      {"inputs": [{"internalType": "uint256","name": "_amount","type": "uint256"}],
-      "name": "stake","outputs": [],"stateMutability": "nonpayable","type": "function"},
-      {"inputs": [],"name": "withdraw","outputs": [],"stateMutability": "nonpayable","type": "function"}
-    ];
+/* ---------- state ---------- */
+let web3;
+let user;
+let erc20;
+let vault;
+let decimals = 6;
+let pollHandle = null;
 
-    let web3;
-    let contract;
-    let accounts;
+/* ---------- UI refs ---------- */
+const statusEl = document.getElementById('status');
+const acctEl = document.getElementById('acct');
+const networkNameEl = document.getElementById('networkName');
+const usdcBalanceEl = document.getElementById('usdcBalance');
+const yourDepositEl = document.getElementById('yourDeposit');
+const yourRewardEl = document.getElementById('yourReward');
+const contractLinkEl = document.getElementById('contractLink');
+contractLinkEl.href = `${BLOCK_EXPLORER_BASE}/address/${CONTRACT_ADDRESS}`;
 
-    const connectButton = document.getElementById("connectButton");
-    const disconnectButton = document.getElementById("disconnectButton");
-    const depositButton = document.getElementById("depositButton");
-    const viewDepositButton = document.getElementById("viewDepositButton");
-    const withdrawButton = document.getElementById("withdrawButton");
-    const output = document.getElementById("output");
+/* ---------- helpers ---------- */
+function setStatus(msg){ statusEl.innerText = "Status: " + msg; }
+function short(addr){ if(!addr) return "-"; return addr.slice(0,6) + "..." + addr.slice(-4); }
+function safeBigIntTenPow(n){ return BigInt(10) ** BigInt(n); }
+function toMicro(amountStr){
+  // converts "1.5" -> integer micro units as string based on decimals
+  const s = String(amountStr || "0").trim();
+  if(s === "") return "0";
+  if(s.includes(".")){
+    const [w,f] = s.split(".");
+    const frac = (f + "0".repeat(decimals)).slice(0,decimals);
+    return (BigInt(w) * safeBigIntTenPow(decimals) + BigInt(frac)).toString();
+  } else {
+    return (BigInt(s) * safeBigIntTenPow(decimals)).toString();
+  }
+}
+function fromMicro(microStr){
+  try{
+    const n = BigInt(microStr || "0");
+    const whole = n / safeBigIntTenPow(decimals);
+    const frac = n % safeBigIntTenPow(decimals);
+    const fracStr = frac.toString().padStart(decimals,'0').replace(/0+$/,'');
+    return fracStr ? `${whole.toString()}.${fracStr}` : whole.toString();
+  } catch(e){
+    return "0";
+  }
+}
+function txUrl(hash){ return `${BLOCK_EXPLORER_BASE}/tx/${hash}`; }
 
-    connectButton.onclick = async () => {
-      if (window.ethereum) {
-        web3 = new Web3(window.ethereum);
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-        accounts = await web3.eth.getAccounts();
-        contract = new web3.eth.Contract(abi, contractAddress);
-        connectButton.style.display = "none";
-        disconnectButton.style.display = "inline-block";
-        output.innerText = "Wallet connected: " + accounts[0];
-      } else {
-        alert("Please install MetaMask to connect your wallet.");
+/* ---------- web3 init & UI wiring ---------- */
+async function initWeb3IfNeeded(){
+  if (window.ethereum == null) {
+    setStatus("No injected wallet detected. Install MetaMask or similar.");
+    return false;
+  }
+  if (!web3) web3 = new Web3(window.ethereum);
+  return true;
+}
+
+async function connectWallet(){
+  try {
+    if (!await initWeb3IfNeeded()) return;
+    const accs = await window.ethereum.request({ method: "eth_requestAccounts" });
+    user = (accs && accs[0]) ? accs[0].toLowerCase() : null;
+    acctEl.innerText = user ? short(user) : "-";
+    networkNameEl.innerText = await web3.eth.getChainId();
+    erc20 = new web3.eth.Contract(ERC20_ABI, USDC_ADDRESS);
+    vault = new web3.eth.Contract(VAULT_ABI, CONTRACT_ADDRESS);
+    // decimals
+    try { const d = await erc20.methods.decimals().call(); decimals = parseInt(d); } catch(e){ decimals = 6; }
+    setStatus("Wallet connected: " + short(user));
+    // start polling
+    if (!pollHandle) pollHandle = setInterval(refreshAll, POLL_INTERVAL);
+    await refreshAll();
+  } catch(err){
+    console.error(err);
+    setStatus("Connection failed: " + (err.message || err));
+  }
+}
+
+/* refresh balances and stake info */
+async function refreshAll(){
+  if (!user || !erc20) return;
+  try {
+    const bal = await erc20.methods.balanceOf(user).call();
+    const allowance = await erc20.methods.allowance(user, CONTRACT_ADDRESS).call();
+    usdcBalanceEl.innerText = fromMicro(bal) + " USDC";
+    document.getElementById('depositInfo').innerText = `Allowance: ${fromMicro(allowance)} USDC (contract can spend this).`;
+
+    // get stake
+    try {
+      const stake = await vault.methods.getMyStake().call({ from: user });
+      yourDepositEl.innerText = fromMicro(stake.amount) + " USDC";
+      yourRewardEl.innerText = fromMicro(stake.reward) + " USDC";
+    } catch(e){
+      yourDepositEl.innerText = "-";
+      yourRewardEl.innerText = "-";
+    }
+  } catch(e){
+    console.error(e);
+    setStatus("Refresh failed: " + (e.message || e));
+  }
+}
+
+/* ensure approval (only approve needed amount) */
+async function ensureApproval(amountMicroStr){
+  if (!user) throw new Error("Connect wallet first");
+  const allowance = await erc20.methods.allowance(user, CONTRACT_ADDRESS).call();
+  if (web3.utils.toBN(allowance).gte(web3.utils.toBN(amountMicroStr))) return true;
+  setStatus("Requesting approval for " + fromMicro(amountMicroStr) + " USDC...");
+  try {
+    const tx = await erc20.methods.approve(CONTRACT_ADDRESS, amountMicroStr).send({ from: user });
+    setStatus("Approval tx: " + tx.transactionHash);
+    return true;
+  } catch(e){
+    console.error(e);
+    throw new Error("Approval failed: " + (e && e.message ? e.message : e));
+  }
+}
+
+/* deposit flow */
+async function depositFlow(amountStr){
+  try {
+    if (!user) return setStatus("Connect wallet first");
+    if (!amountStr || isNaN(Number(amountStr)) || Number(amountStr) <= 0) return setStatus("Enter a valid positive amount.");
+    const micro = toMicro(amountStr);
+    // check balance
+    const bal = await erc20.methods.balanceOf(user).call();
+    if (web3.utils.toBN(bal).lt(web3.utils.toBN(micro))) return setStatus("Insufficient USDC balance: " + fromMicro(bal));
+    // disable UI
+    toggleButtons(true);
+    // ensure approval then stake
+    await ensureApproval(micro);
+    setStatus("Sending stake transaction...");
+    const tx = await vault.methods.stake(micro).send({ from: user });
+    setStatus("Stake confirmed: " + tx.transactionHash);
+    await refreshAll();
+  } catch(e){
+    console.error(e);
+    setStatus("Deposit failed: " + (e && e.message ? e.message : e));
+  } finally {
+    toggleButtons(false);
+  }
+}
+
+/* withdraw flow */
+async function withdrawFlow(){
+  try {
+    if (!user) return setStatus("Connect wallet first");
+    toggleButtons(true);
+    setStatus("Sending withdraw transaction...");
+    const tx = await vault.methods.withdraw().send({ from: user });
+    setStatus("Withdraw confirmed: " + tx.transactionHash);
+    await refreshAll();
+  } catch(e){
+    console.error(e);
+    setStatus("Withdraw failed: " + (e && e.message ? e.message : e));
+  } finally {
+    toggleButtons(false);
+  }
+}
+
+/* UI helpers */
+function toggleButtons(disable){
+  document.getElementById('approveDepositBtn').disabled = disable;
+  document.getElementById('maxBtn').disabled = disable;
+  document.getElementById('connectBtn').disabled = disable;
+  document.getElementById('refreshBtn').disabled = disable;
+  document.getElementById('viewBtn').disabled = disable;
+  document.getElementById('withdrawBtn').disabled = disable;
+}
+
+/* UI events */
+document.getElementById('connectBtn').addEventListener('click', connectWallet);
+document.getElementById('approveDepositBtn').addEventListener('click', async () => {
+  const v = document.getElementById('amount').value;
+  await depositFlow(String(v));
+});
+document.getElementById('withdrawBtn').addEventListener('click', withdrawFlow);
+document.getElementById('viewBtn').addEventListener('click', refreshAll);
+document.getElementById('refreshBtn').addEventListener('click', refreshAll);
+document.getElementById('maxBtn').addEventListener('click', async () => {
+  if (!user) return setStatus("Connect wallet first");
+  try {
+    const bal = await erc20.methods.balanceOf(user).call();
+    document.getElementById('amount').value = fromMicro(bal);
+    setStatus("Max loaded.");
+  } catch(e){ setStatus("Failed to load max: " + (e.message || e)); }
+});
+
+/* auto-connect if already authorized */
+(async function autoInit(){
+  try {
+    await initOnLoad();
+    // if already authorized, auto connect
+    if (window.ethereum) {
+      const accs = await window.ethereum.request({ method: 'eth_accounts' });
+      if (accs && accs.length) {
+        await connectWallet();
       }
-    };
+      // listeners
+      window.ethereum.on('accountsChanged', async (accs) => {
+        if (!accs || !accs.length) { user = null; acctEl.innerText = '-'; setStatus("Wallet disconnected"); return; }
+        user = accs[0].toLowerCase(); acctEl.innerText = short(user); setStatus("Account changed: " + short(user)); await connectWallet();
+      });
+      window.ethereum.on('chainChanged', async (chainId) => { setStatus("Chain changed, refreshing..."); await connectWallet(); });
+    }
+  } catch(e){}
+})();
 
-    disconnectButton.onclick = () => {
-      accounts = [];
-      connectButton.style.display = "inline-block";
-      disconnectButton.style.display = "none";
-      output.innerText = "Wallet disconnected.";
-    };
+async function initOnLoad(){
+  if (window.ethereum) {
+    web3 = new Web3(window.ethereum);
+    try { networkNameEl.innerText = await web3.eth.getChainId(); } catch(e){ networkNameEl.innerText = 'unknown'; }
+    return true;
+  } else {
+    setStatus("No injected wallet found. Install MetaMask.");
+    return false;
+  }
+}
 
-    depositButton.onclick = async () => {
-      const amount = document.getElementById("amount").value;
-      if (!amount) return alert("Enter an amount first");
-      try {
-        await contract.methods.stake(amount * 1e6).send({ from: accounts[0] });
-        output.innerText = "Deposit successful!";
-      } catch (err) {
-        output.innerText = "Deposit failed: " + err.message;
-      }
-    };
-
-    viewDepositButton.onclick = async () => {
-      try {
-        const result = await contract.methods.getMyStake().call({ from: accounts[0] });
-        const amount = result.amount / 1e6;
-        const reward = result.reward / 1e6;
-        output.innerText = `You deposited ${amount} USDC | Interest Earned: ${reward} USDC`;
-      } catch (err) {
-        output.innerText = "Error: " + err.message;
-      }
-    };
-
-    withdrawButton.onclick = async () => {
-      try {
-        await contract.methods.withdraw().send({ from: accounts[0] });
-        output.innerText = "Withdrawal successful!";
-      } catch (err) {
-        output.innerText = "Withdraw failed: " + err.message;
-      }
-    };
-  </script>
+</script>
 </body>
 </html>
