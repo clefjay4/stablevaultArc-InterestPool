@@ -36,7 +36,6 @@ The project uses a clean, futuristic Arc style interface and follows secure smar
 
 ## Verified Contract
 Address: 0xc3b2a6dd055f9c36d55a1d9267b94008d1789472
-Explorer: https://explorer.arc.network/address/0xc3b2a6dd055f9c36d55a1d9267b94008d1789472
 - Verified on: [ArcScan Testnet](https://testnet.arcscan.app/address/0xc3b2a6dd055f9c36d55a1d9267b94008d1789472
 
 
